@@ -7,7 +7,9 @@ mod tests {
     use chonky::Chonky;
 
     #[test]
-    fn fail() {
-        todo!()
+    fn dead_letter_check() {
+        let c = Chonky::new();
+        let res = c.post(String::from("Hello"), vec!());
+        assert!(res.is_err());
     }
 }

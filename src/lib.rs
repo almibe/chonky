@@ -25,7 +25,7 @@ impl Chonky {
     /// Most likely you'll only need one of these per application and either share or make static.
     pub fn new() -> Chonky {
         Chonky {
-            addressees: HashMap::new()
+            addressees: HashMap::new(),
         }
     }
 
@@ -37,6 +37,10 @@ impl Chonky {
 
     /// Posts a message to the given address.
     pub fn post(&self, address: String, message: Vec<u8>) -> Result<Res, DeadLetter> {
-        todo!()
+        let res = self.addressees.get(&address);
+        match res {
+            Some(handler) => Ok(handler(message)),
+            None => Err(DeadLetter(format!("Could not find {}", address))),
+        }
     }
 }
