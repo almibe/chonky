@@ -19,6 +19,12 @@ mod tests {
         bincode::serialize(&decoded).unwrap()
     }
 
+    fn reverse_name(serialized_person: Vec<u8>) -> Vec<u8> {
+        let mut decoded: Person = bincode::deserialize(&serialized_person[..]).unwrap();
+        decoded.name = decoded.name.chars().rev().collect();
+        bincode::serialize(&decoded).unwrap()
+    }
+
     #[test]
     fn dead_letter_check() {
         let c = Chonky::new();
@@ -39,6 +45,26 @@ mod tests {
         let res_person: Person = bincode::deserialize(&res_encoded[..]).unwrap();
         let expected = Person {
             name: String::from("Emile"),
+            age: 56,
+        };
+        assert_eq!(res_person, expected);
+    }
+
+    #[test]
+    fn add_two_addressees_add_send_messages() {
+        let mut c = Chonky::new();
+        c.register_addressee(String::from("increase_age"), increase_age);
+        c.register_addressee(String::from("reverse_name"), reverse_name);
+        let person = Person {
+            name: String::from("Emile"),
+            age: 55,
+        };
+        let encoded: Vec<u8> = bincode::serialize(&person).unwrap();        
+        let res_encoded = c.post(String::from("increase_age"), encoded).unwrap();
+        let res_encoded2 = c.post(String::from("reverse_name"), res_encoded).unwrap();
+        let res_person: Person = bincode::deserialize(&res_encoded2[..]).unwrap();
+        let expected = Person {
+            name: String::from("elimE"),
             age: 56,
         };
         assert_eq!(res_person, expected);
