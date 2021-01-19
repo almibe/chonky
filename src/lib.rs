@@ -13,6 +13,7 @@ type Handler = fn(Vec<u8>) -> Vec<u8>;
 type Res = Vec<u8>; //TODO should be the reciever end of a channel
 
 /// Represents a message that couldn't be sent since the addressee doesn't exist.
+#[derive(PartialEq, Debug)]
 pub struct DeadLetter(String);
 
 /// The main struct used by Chonky, create a new one with Chonky::new().

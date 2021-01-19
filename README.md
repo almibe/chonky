@@ -9,13 +9,13 @@ I'm interested in feed back if you are using this project and having an question
 ## Goals
 Chonky is a library that tries to make inter-module communication easier in Rust via message passing.
 TBH, most Rust projects won't need to use a project like Chonky, but it can be helpful in certain cases.
-Chonky focuses on simplicity and flexibility so it deviates from some Rust-isms to achieve that goal since writing type-safe and dynamic code in Rust can be very difficult.
+Chonky focuses on simplicity and flexibility so it deviates from some Rust-isms to achieve that goal since writing dynamic code in Rust that is type-safe can be very difficult.
 
 ## Messaging style
 Chonky uses a 1:M request-response style messaging.
 A sender passes one message to an address and then gets back 0 to infinity responses or an error.
 Only a single addressee can have a given address and if a message is passed to an address that doesn't exist a DeadLetter error is returned.
-Other messaging styles might be considered later, but this is the main focus of Chonky.
+Other messaging styles might be considered later, but this is the focus of Chonky currently.
 
 ## Basics
 Chonky's api is very simple you can only really do two things with it.
@@ -31,6 +31,6 @@ This is the only time Chonky panics and most of the time addressee registration 
 The second part is a function pointer that is called when a message is passed to that address.
 
 ### Messages
-A message is simply a Vec<u8> payload.
+A message is simply a Vec&lt;u8&gt; payload.
 In the same way that users need to come up with their own agreed upon naming scheme, users need to come up with an agreed upon serialization.
 My reccomendation would be to use [bincode](https://github.com/servo/bincode) on an agreed upon data strucutre.
