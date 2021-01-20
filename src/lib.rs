@@ -9,16 +9,35 @@
 
 use std::collections::HashMap;
 
-type Handler = fn(Vec<u8>) -> Vec<u8>;
-type Res = Vec<u8>; //TODO should be the reciever end of a channel
-
+/// The request/response type for Chonky.
+pub type Messages = Box<dyn Iterator<Item = Vec<u8>>>;
+/// The type of a handler for Chonky.
+pub type Handler = fn(Messages) -> Result<Messages, HandlerError>;
+/// Represents an error from a Handler function.
+#[derive(PartialEq, Debug)]
+pub struct HandlerError(String);
 /// Represents a message that couldn't be sent since the addressee doesn't exist.
 #[derive(PartialEq, Debug)]
 pub struct DeadLetter(String);
 
+/// Represents an error that can be returned from a call to the post method.
+#[derive(PartialEq, Debug)]
+pub enum ChonkyError {
+    /// Wrapper for HandlerErrors.
+    HandlerError(HandlerError),
+    /// Wrapper for DeadLetter errors.
+    DeadLetter(DeadLetter),
+}
+
 /// The main struct used by Chonky, create a new one with Chonky::new().
 pub struct Chonky {
     addressees: HashMap<String, Handler>,
+}
+
+impl Default for Chonky {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Chonky {
@@ -37,11 +56,20 @@ impl Chonky {
     }
 
     /// Posts a message to the given address.
-    pub fn post(&self, address: String, message: Vec<u8>) -> Result<Res, DeadLetter> {
-        let res = self.addressees.get(&address);
-        match res {
-            Some(handler) => Ok(handler(message)),
-            None => Err(DeadLetter(format!("Could not find {}", address))),
+    pub fn post(&self, address: String, message: Messages) -> Result<Messages, ChonkyError> {
+        let addressee = self.addressees.get(&address);
+        match addressee {
+            Some(handler) => {
+                let result = handler(message);
+                match result {
+                    Ok(messages) => Ok(messages),
+                    Err(error) => Err(ChonkyError::HandlerError(error)),
+                }
+            }
+            None => Err(ChonkyError::DeadLetter(DeadLetter(format!(
+                "Could not find {}",
+                address
+            )))),
         }
     }
 }
