@@ -8,9 +8,10 @@
 //#![deny(missing_doc_example)] <-- for later, when I'm swole
 
 use std::collections::HashMap;
+use std::any::Any;
 
 /// The request/response type for Chonky.
-pub type Messages = Box<dyn Iterator<Item = Vec<u8>>>;
+pub type Messages = Box<dyn Iterator<Item = Box<dyn Any>>>;
 /// The type of a handler for Chonky.
 pub type Handler = fn(Messages) -> Result<Messages, HandlerError>;
 /// Represents an error from a Handler function.
