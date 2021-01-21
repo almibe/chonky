@@ -4,19 +4,17 @@
 
 #[cfg(test)]
 mod tests {
-    use chonky::{Chonky, HandlerError, Messages};
-    use serde::{Deserialize, Serialize};
+    use chonky::{Chonky, HandlerError, Messages, to_messages, from_messages};
     use std::iter;
-    use std::any::Any;
 
-    #[derive(Serialize, Clone, Deserialize, PartialEq, Debug)]
+    #[derive(Clone, PartialEq, Debug)]
     struct Person {
         name: String,
         age: u8,
     }
 
     fn increase_age(input: Messages) -> Result<Messages, HandlerError> {
-        Ok(to_messages(from_messages(input).map(|p| {
+        Ok(to_messages(from_messages(input).map(|p: Person| {
             Person {
                 name: p.name,
                 age: p.age + 1,
@@ -25,32 +23,12 @@ mod tests {
     }
 
     fn reverse_name(input: Messages) -> Result<Messages, HandlerError> {
-        Ok(to_messages(from_messages(input).map(|p| {
+        Ok(to_messages(from_messages(input).map(|p: Person| {
             Person {
                 name: p.name.chars().rev().collect(),
                 age: p.age,
             }
         })))
-    }
-
-    fn to_messages(people: impl Iterator<Item = Person> + 'static) -> Messages {
-        let itr = people.map(|p| Box::new(p) as Box<dyn Any>);
-        Box::new(itr)
-    }
-
-    fn decode_from_any(any: Box<dyn Any>) -> Person {
-        match any.downcast_ref::<Person>() {
-            Some(p) => {
-                p.clone()
-            }
-            None => {
-                todo!()
-            }
-        }
-    }
-    
-    fn from_messages(messages: Messages) -> impl Iterator<Item = Person> {
-        messages.map(|m| decode_from_any(m))
     }
 
     #[test]
@@ -62,6 +40,14 @@ mod tests {
         };
         let res = c.post(String::from("Hello"), to_messages(iter::once(p)));
         assert!(res.is_err()); //TODO should check it's a DeadLetter not just an Err
+    }
+
+    #[test]
+    #[should_panic]
+    fn dont_allow_addressees_with_same_address() {
+        let mut c = Chonky::new();
+        c.register_addressee(String::from("increase_age"), increase_age);
+        c.register_addressee(String::from("increase_age"), reverse_name);
     }
 
     #[test]

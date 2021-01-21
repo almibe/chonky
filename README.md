@@ -11,8 +11,8 @@ Chonky is a library that tries to make inter-module communication easier in Rust
 TBH, most Rust projects won't need to use a project like Chonky, but it can be helpful in certain cases.
 Chonky focuses on simplicity and flexibility so it deviates from some Rust-isms to achieve that goal since writing dynamic code in Rust that is type-safe can be very difficult.
 
-## Messaging style
-Chonky uses a M:N request-response style messaging.
+## Messaging Style
+Chonky uses an M:N request-response style messaging.
 A sender passes a stream of messages to an address and then gets back a stream of responses or an error.
 Only a single addressee can have a given address and if a message is passed to an address that doesn't exist a DeadLetter error is returned.
 Other messaging styles might be considered later, but this is the focus of Chonky currently.
@@ -31,8 +31,7 @@ This is the only time Chonky panics and most of the time addressee registration 
 The second part is a function pointer that is called when a message stream is passed to that address.
 
 ### Messages
-A message is simply a Vec&lt;u8&gt; payload.
-In the same way that users need to come up with their own agreed upon naming scheme, users need to come up with an agreed upon serialization.
-My reccomendation would be to use [bincode](https://github.com/servo/bincode) on an agreed upon data strucutre.
-Since Chonky is only used for inter-module communication serialization only has to be done a few places in a large application.
-Once I've worked on this project longer I'll probably add some helper functions/macros to help deal with these conversions.
+A message is simply an `Any + Clone` payload.
+In the same way that users need to come up with their own agreed upon naming scheme, users need to come up with an agreed upon types.
+Since Chonky is only used for inter-module communication dealing with `Any`s only has to be done a few places in a large application.
+See the helper methods `to_messages` and `from_messages` for help with converting.

@@ -41,6 +41,25 @@ impl Default for Chonky {
     }
 }
 
+/// A helper fn that converts a given Iterator of a generic type to Messages.
+pub fn to_messages<T: 'static>(input: impl Iterator<Item = T> + 'static) -> Messages {
+    let itr = input.map(|i| Box::new(i) as Box<dyn Any>);
+    Box::new(itr)
+}
+
+/// A helper fn that converts a given stream of Messages into an Iterator of a generic type.
+/// TODO should return a Result
+pub fn from_messages<T: 'static + Clone>(messages: Messages) -> impl Iterator<Item = T> {
+    messages.map(|m| match m.downcast_ref::<T>() {
+        Some(t) => {
+            t.clone()
+        }
+        None => {
+            todo!()
+        }
+    })
+}
+
 impl Chonky {
     /// Creates a new instance of Chonky.
     /// Most likely you'll only need one of these per application and either share or make static.
@@ -53,7 +72,11 @@ impl Chonky {
     /// Adds a new addrressee to this instance.
     /// Note: This function panics if there is already an addressee registered for this address.
     pub fn register_addressee(&mut self, address: String, handler: Handler) {
-        self.addressees.insert(address, handler);
+        if self.addressees.contains_key(&address) {
+            panic!("Cannot have two addressees with address {}", address);
+        } else {
+            self.addressees.insert(address, handler);
+        }
     }
 
     /// Posts a message to the given address.
